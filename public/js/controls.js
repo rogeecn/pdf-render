@@ -32,8 +32,9 @@ export class ViewerControls {
       cursor: 'default',
       animate: true,
       duration: 200,
-      disablePan: true,
-      noBind: true,
+      overflow: 'auto',
+      touchAction: 'auto',
+      panOnlyWhenZoomed: true,
     })
 
     this.viewport.addEventListener('wheel', (e) => {
