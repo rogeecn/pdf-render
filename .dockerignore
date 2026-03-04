@@ -1,0 +1,7 @@
+node_modules
+pdfs
+.git
+*.md
+*.png
+outline-issue.png
+gview-dummy.png
