@@ -3,44 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF Viewer</title>
+  <title>PDF Library</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/list.css">
 </head>
 <body>
   <div id="app">
-    <div id="toolbar">
-      <div id="toolbar-left">
-        <button id="toggle-outline" title="Table of Contents" aria-pressed="false" style="display: none;">☰</button>
-        <button id="zoom-out" title="Zoom Out">&minus;</button>
-        <span id="zoom-level">100%</span>
-        <button id="zoom-in" title="Zoom In">+</button>
-        <button id="fit-width" title="Fit Width">Fit W</button>
-        <button id="fit-page" title="Fit Page">Fit P</button>
-        <button id="toggle-mode" title="Toggle page flip mode" aria-pressed="false">Paged</button>
-      </div>
-      <div id="toolbar-center">
-        <span id="page-indicator">Loading...</span>
-      </div>
-      <div id="toolbar-right">
-        <button id="toggle-autoscroll" title="Auto Scroll" aria-pressed="false">▶</button>
-        <input type="range" id="autoscroll-speed" min="10" max="50" value="30" title="Scroll Speed">
-        <span id="autoscroll-speed-value">30</span>
-        <button id="reset" title="Reset View">Reset</button>
-      </div>
+    <div id="header">
+      <h1>PDF Library</h1>
+      <span id="pdf-count"></span>
     </div>
-
-    <div id="viewport">
-      <div id="outline-panel">
-        <div id="outline-header">
-          <span>Table of Contents</span>
-          <button id="close-outline" title="Close">×</button>
-        </div>
-        <div id="outline-tree"></div>
-      </div>
-      <div id="page-container"></div>
+    <div id="pdf-list">
+      <div class="loading">Loading...</div>
     </div>
   </div>
-
-  <script type="module" src="/js/app.js"></script>
+  <script type="module" src="/js/list.js"></script>
 </body>
 </html>

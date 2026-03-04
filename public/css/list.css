@@ -1,0 +1,92 @@
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #323639;
+  color: #fff;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+#header h1 {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+#pdf-count {
+  font-size: 14px;
+  color: #ccc;
+}
+
+#pdf-list {
+  flex: 1;
+  padding: 16px 24px;
+  background: #525659;
+}
+
+#pdf-list .loading {
+  color: #ccc;
+  text-align: center;
+  padding: 40px;
+}
+
+#pdf-list .empty {
+  color: #999;
+  text-align: center;
+  padding: 40px;
+}
+
+.pdf-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s;
+}
+
+.pdf-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-item:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #4a9eff;
+}
+
+.pdf-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pdf-filename {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-meta {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.pdf-arrow {
+  color: #999;
+  font-size: 18px;
+  margin-left: 12px;
+}
