@@ -1,11 +1,17 @@
 import express from 'express'
 import path from 'node:path'
 import { getPdfInfo, renderPage, getPdfOutline } from './pdf-renderer.js'
+import { getAllPdfs, startPeriodicScan } from './pdf-index.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.static(path.resolve('public')))
+
+app.get('/api/pdfs', (req, res) => {
+  const pdfs = getAllPdfs()
+  res.json(pdfs)
+})
 
 app.get('/api/pdf/:id/info', (req, res) => {
   const { id } = req.params
@@ -38,7 +44,7 @@ app.get('/api/pdf/:id/page/:pageNum', (req, res) => {
     'Content-Length': png.length,
     'Cache-Control': 'public, max-age=3600',
   })
-res.send(png)
+  res.send(png)
 })
 
 app.get('/api/pdf/:id/outline', (req, res) => {
@@ -47,6 +53,16 @@ app.get('/api/pdf/:id/outline', (req, res) => {
   res.json({ items })
 })
 
+app.get('/view/*', (req, res) => {
+  res.sendFile(path.resolve('public/view.html'))
+})
+
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve('public/index.html'))
+})
+
+startPeriodicScan()
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`PDF Viewer server running at http://0.0.0.0:${PORT}`)
+  console.log(`PDF Library server running at http://0.0.0.0:${PORT}`)
 })
