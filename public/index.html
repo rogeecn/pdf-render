@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Viewer</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <div id="toolbar-left">
+        <button id="zoom-out" title="Zoom Out">&minus;</button>
+        <span id="zoom-level">100%</span>
+        <button id="zoom-in" title="Zoom In">+</button>
+        <button id="fit-width" title="Fit Width">Fit W</button>
+        <button id="fit-page" title="Fit Page">Fit P</button>
+      </div>
+      <div id="toolbar-center">
+        <span id="page-indicator">Loading...</span>
+      </div>
+      <div id="toolbar-right">
+        <button id="reset" title="Reset View">Reset</button>
+      </div>
+    </div>
+
+    <div id="viewport">
+      <div id="page-container">
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
