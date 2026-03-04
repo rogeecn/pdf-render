@@ -1,0 +1,16 @@
+{
+  "name": "try-pdf-server-render",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "@panzoom/panzoom": "^4.6.1",
+    "express": "^5.2.1",
+    "mupdf": "^1.27.0"
+  }
+}
