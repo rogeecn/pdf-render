@@ -2,11 +2,13 @@ import express from 'express'
 import path from 'node:path'
 import { getPdfInfo, renderPage, getPdfOutline } from './pdf-renderer.js'
 import { getAllPdfs, startPeriodicScan, getFolderNode, listSearchResults, getPdfsByIds, getPdfById } from './pdf-index.js'
+import { loadProgress, getProgress, setProgress, getAllProgress } from './progress-store.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.static(path.resolve('public')))
+app.use(express.json())
 
 app.get('/api/pdfs', (req, res) => {
   const { ids, flat } = req.query
@@ -112,6 +114,31 @@ app.get('/api/pdf/:id/meta', (req, res) => {
   })
 })
 
+app.get('/api/progress', (req, res) => {
+  res.json(getAllProgress())
+})
+
+app.get('/api/progress/:id', (req, res) => {
+  const { id } = req.params
+  const progress = getProgress(id)
+  if (!progress) {
+    return res.json({ page: null })
+  }
+  res.json({ page: progress.page, updatedAt: progress.updatedAt })
+})
+
+app.put('/api/progress/:id', (req, res) => {
+  const { id } = req.params
+  const { page } = req.body
+
+  if (typeof page !== 'number' || page < 1 || !Number.isInteger(page)) {
+    return res.status(400).json({ error: 'Invalid page number' })
+  }
+
+  setProgress(id, page)
+  res.json({ ok: true })
+})
+
 app.get('/view/{*splat}', (req, res) => {
   res.sendFile(path.resolve('public/view.html'))
 })
@@ -120,6 +147,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.resolve('public/index.html'))
 })
 
+loadProgress()
 startPeriodicScan()
 
 app.listen(PORT, '0.0.0.0', () => {
