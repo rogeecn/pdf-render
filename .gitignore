@@ -1,5 +1,5 @@
 node_modules/
-pdfs/**
+ebooks/**
 tmp/
 reading-progress.json
-pdf-cache.json
+ebook-cache.json

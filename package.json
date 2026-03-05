@@ -1,5 +1,5 @@
 {
-  "name": "try-pdf-server-render",
+  "name": "ebook-viewer",
   "version": "1.0.0",
   "description": "",
   "main": "server/index.js",

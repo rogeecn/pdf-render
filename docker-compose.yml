@@ -1,12 +1,12 @@
 services:
-  pdf-library:
+  ebook-library:
     build: .
     ports:
       - "3000:3000"
     volumes:
-      - ./pdfs:/app/pdfs:ro
+      - ./ebooks:/app/ebooks:ro
     environment:
       - PORT=3000
-      - PDF_DIR=/app/pdfs
+      - EBOOK_DIR=/app/ebooks
       - SCAN_INTERVAL=1800000
     restart: unless-stopped

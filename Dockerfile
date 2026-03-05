@@ -18,13 +18,13 @@ COPY package.json ./
 COPY server ./server
 COPY public ./public
 
-RUN mkdir -p /app/pdfs && chown -R node:node /app
+RUN mkdir -p /app/ebooks && chown -R node:node /app
 
 USER node
 
 EXPOSE 3000
 
-VOLUME /app/pdfs
+VOLUME /app/ebooks
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server/index.js"]
