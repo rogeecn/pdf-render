@@ -435,6 +435,28 @@ html, body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* ========== Text Layer ========== */
+
+.text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+  line-height: 1.0;
+}
+
+.text-layer span {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.text-layer span::selection {
+  background: rgba(0, 100, 255, 0.3);
+}
+
 /* ========== Responsive ========== */
 
 @media (max-width: 768px) {

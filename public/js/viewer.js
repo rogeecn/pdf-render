@@ -1,3 +1,5 @@
+import { TextLayer } from './text-layer.js'
+
 const DEFAULT_SCALE = 1.5
 const DISPLAY_WIDTH = 800
 
@@ -102,7 +104,11 @@ export class PdfViewer {
     canvas.className = 'page-canvas'
     this.setupCanvas(canvas, displayWidth, displayHeight)
 
+    const textLayerDiv = document.createElement('div')
+    textLayerDiv.className = 'text-layer'
+
     wrapper.appendChild(canvas)
+    wrapper.appendChild(textLayerDiv)
     return wrapper
   }
 
@@ -165,6 +171,22 @@ export class PdfViewer {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       wrapper.classList.remove('loading')
+
+      const textLayerDiv = wrapper.querySelector('.text-layer')
+      if (textLayerDiv && !textLayerDiv.hasChildNodes()) {
+        fetch(`/api/pdf/${this.pdfId}/page/${pageNum}/text`)
+          .then(res => {
+            if (!res.ok) throw new Error(`Text fetch failed: ${res.statusText}`)
+            return res.json()
+          })
+          .then(textData => {
+            const textLayer = new TextLayer()
+            textLayer.render(textData, textLayerDiv, displayWidth, displayHeight)
+          })
+          .catch(err => {
+            console.warn(`Failed to load text for page ${pageNum}:`, err)
+          })
+      }
     } catch (err) {
       console.error(`Failed to render page ${pageNum}:`, err)
     }
