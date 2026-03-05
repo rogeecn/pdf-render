@@ -1,6 +1,6 @@
 import express from 'express'
 import path from 'node:path'
-import { getPdfInfo, renderPage, getPdfOutline } from './pdf-renderer.js'
+import { getPdfInfo, renderPage, getPdfOutline, getPageText } from './pdf-renderer.js'
 import { getAllPdfs, startPeriodicScan, getFolderNode, listSearchResults, getPdfsByIds, getPdfById } from './pdf-index.js'
 import { loadProgress, getProgress, setProgress, getAllProgress } from './progress-store.js'
 
@@ -88,6 +88,24 @@ app.get('/api/pdf/:id/page/:pageNum', (req, res) => {
     'Cache-Control': 'public, max-age=3600',
   })
   res.send(png)
+})
+
+app.get('/api/pdf/:id/page/:pageNum/text', (req, res) => {
+  const { id, pageNum } = req.params
+  const page = parseInt(pageNum, 10)
+
+  if (isNaN(page) || page < 1) {
+    return res.status(400).json({ error: 'Invalid page number' })
+  }
+
+  const textData = getPageText(id, page)
+
+  if (!textData) {
+    return res.status(404).json({ error: `Page ${page} not found for PDF "${id}"` })
+  }
+
+  res.set({ 'Cache-Control': 'public, max-age=3600' })
+  res.json(textData)
 })
 
 app.get('/api/pdf/:id/outline', (req, res) => {

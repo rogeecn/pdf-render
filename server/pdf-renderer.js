@@ -84,6 +84,35 @@ export function getPdfOutline(pdfId) {
   }
 }
 
+const textCache = new LRUCache(200)
+
+export function getPageText(pdfId, pageNum) {
+  const cacheKey = `${pdfId}:${pageNum}:text`
+  const cached = textCache.get(cacheKey)
+  if (cached) return cached
+
+  const doc = getDocument(pdfId)
+  if (!doc) return null
+
+  const pageCount = doc.countPages()
+  const pageIndex = pageNum - 1
+  if (pageIndex < 0 || pageIndex >= pageCount) return null
+
+  const page = doc.loadPage(pageIndex)
+  const bounds = page.getBounds()
+  const stext = page.toStructuredText()
+  const json = JSON.parse(stext.asJSON(1))
+
+  const result = {
+    width: bounds[2] - bounds[0],
+    height: bounds[3] - bounds[1],
+    blocks: json.blocks,
+  }
+
+  textCache.set(cacheKey, result)
+  return result
+}
+
 export function renderPage(pdfId, pageNum, scale = 1.5) {
   if (scale < 0.5) scale = 0.5
   if (scale > 4.0) scale = 4.0
