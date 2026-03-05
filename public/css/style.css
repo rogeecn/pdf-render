@@ -443,14 +443,17 @@ html, body {
   overflow: hidden;
   z-index: 1;
   line-height: 1.0;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .text-layer span {
   position: absolute;
   color: transparent;
   white-space: pre;
-  user-select: text;
-  -webkit-user-select: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text;
 }
 
 .text-layer span::selection {

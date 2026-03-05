@@ -105,7 +105,7 @@ export class PdfViewer {
     this.setupCanvas(canvas, displayWidth, displayHeight)
 
     const textLayerDiv = document.createElement('div')
-    textLayerDiv.className = 'text-layer'
+    textLayerDiv.className = 'text-layer panzoom-exclude'
 
     wrapper.appendChild(canvas)
     wrapper.appendChild(textLayerDiv)
