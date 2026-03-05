@@ -42,7 +42,7 @@ export function getPdfInfo(pdfId) {
   const entry = getPdfById(pdfId)
   return {
     id: pdfId,
-    filename: entry?.filename,
+    filename: entry?.name,
     pageCount,
     pages,
   }
