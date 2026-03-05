@@ -1,4 +1,4 @@
-const ROW_HEIGHT = 36
+const ROW_HEIGHT = 52
 const RECENTS_KEY = 'pdfLibrary.recents.v1'
 const MAX_RECENTS = 10
 
@@ -44,6 +44,7 @@ function formatSize(bytes) {
 }
 
 function formatTimeAgo(ms) {
+  if (!ms || typeof ms !== 'number' || isNaN(ms)) return 'Unknown'
   const seconds = Math.floor((Date.now() - ms) / 1000)
   if (seconds < 60) return 'just now'
   if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago'
@@ -69,7 +70,9 @@ function highlightMatch(text, query) {
 function getRecents() {
   try {
     const data = localStorage.getItem(RECENTS_KEY)
-    return data ? JSON.parse(data) : []
+    if (!data) return []
+    const parsed = JSON.parse(data)
+    return parsed.filter(r => r && r.id && r.name && typeof r.lastOpenedAt === 'number' && r.lastOpenedAt > 0)
   } catch {
     return []
   }
@@ -108,8 +111,11 @@ function renderRecents() {
   recentSection.style.display = 'block'
   recentList.innerHTML = recents.map(r => `
     <a href="/view/${r.id}" class="recent-item" data-pdf-id="${r.id}">
+      <div class="recent-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      </div>
       <div class="recent-info">
-        <div class="recent-name">${escapeHtml(r.name)}</div>
+        <div class="recent-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
         <div class="recent-meta">${formatTimeAgo(r.lastOpenedAt)}</div>
       </div>
     </a>
@@ -299,11 +305,15 @@ function render() {
           <div class="row-indent" style="width: ${row.depth * 20}px;">
             ${Array(row.depth).fill('<span class="indent-unit"></span>').join('')}
           </div>
-          <span class="folder-toggle ${isExpanded ? 'expanded' : ''} ${hasChildren ? '' : 'empty'}">▶</span>
-          <span class="row-icon folder-icon">📁</span>
+          <span class="folder-toggle ${isExpanded ? 'expanded' : ''} ${hasChildren ? '' : 'empty'}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </span>
+          <span class="row-icon folder-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </span>
           <div class="row-content">
-            <span class="row-name">${escapeHtml(row.data.name)}</span>
-            <span class="row-counts">${row.data.counts?.totalPdfs || 0} PDFs</span>
+            <div class="row-name">${escapeHtml(row.data.name)}</div>
+            <div class="row-counts">${row.data.counts?.totalPdfs || 0} PDFs</div>
           </div>
         </div>
       `
@@ -323,10 +333,12 @@ function render() {
             ${Array(row.depth).fill('<span class="indent-unit"></span>').join('')}
           </div>
           <span class="folder-toggle empty"></span>
-          <span class="row-icon pdf-icon">📄</span>
+          <span class="row-icon pdf-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </span>
           <div class="row-content">
-            <span class="${nameClass}">${displayName}</span>
-            <span class="row-meta">${pdf.pageCount || 0} pages · ${formatSize(pdf.size || 0)}</span>
+            <div class="${nameClass}">${displayName}</div>
+            <div class="row-meta">${pdf.pageCount || 0} pages · ${formatSize(pdf.size || 0)}</div>
           </div>
         </a>
       `
