@@ -67,6 +67,49 @@ function highlightMatch(text, query) {
   return escapeHtml(before) + '<span class="search-highlight">' + escapeHtml(match) + '</span>' + escapeHtml(after)
 }
 
+const PINS_KEY = 'pdfLibrary.pins.v1'
+const MAX_PINS = 3
+
+function getPins() {
+  try {
+    const data = localStorage.getItem(PINS_KEY)
+    if (!data) return []
+    return JSON.parse(data).filter(p => p && p.id && p.name && p.pinnedAt)
+  } catch {
+    return []
+  }
+}
+
+function savePins(pins) {
+  try {
+    localStorage.setItem(PINS_KEY, JSON.stringify(pins))
+  } catch {}
+}
+
+function isPinned(pdfId) {
+  return getPins().some(p => p.id === pdfId)
+}
+
+function togglePin(pdfId) {
+  let pins = getPins()
+  if (isPinned(pdfId)) {
+    pins = pins.filter(p => p.id !== pdfId)
+  } else {
+    if (pins.length >= MAX_PINS) return
+    const recents = getRecents()
+    const pdf = recents.find(r => r.id === pdfId)
+    if (pdf) {
+      pins.unshift({
+        id: pdf.id,
+        name: pdf.name,
+        relPath: pdf.relPath,
+        pinnedAt: Date.now()
+      })
+    }
+  }
+  savePins(pins)
+}
+
 function getRecents() {
   try {
     const data = localStorage.getItem(RECENTS_KEY)
@@ -85,48 +128,105 @@ function saveRecents(recents) {
 }
 
 function addRecent(pdf) {
-  const recents = getRecents().filter(r => r.id !== pdf.id)
-  recents.unshift({
-    id: pdf.id,
-    name: pdf.name,
-    relPath: pdf.relPath,
-    lastOpenedAt: Date.now()
-  })
-  saveRecents(recents.slice(0, MAX_RECENTS))
+  let recents = getRecents()
+  const existing = recents.find(r => r.id === pdf.id)
+  
+  if (existing) {
+    existing.lastOpenedAt = Date.now()
+    if (!isPinned(pdf.id)) {
+      recents = recents.filter(r => r.id !== pdf.id)
+      recents.unshift(existing)
+    }
+  } else {
+    recents.unshift({
+      id: pdf.id,
+      name: pdf.name,
+      relPath: pdf.relPath,
+      lastOpenedAt: Date.now()
+    })
+  }
+
+  if (recents.length > MAX_RECENTS) {
+    const pinnedIds = new Set(getPins().map(p => p.id))
+    const toKeep = recents.filter(r => pinnedIds.has(r.id))
+    const others = recents.filter(r => !pinnedIds.has(r.id))
+    recents = [...toKeep, ...others].slice(0, MAX_RECENTS)
+  }
+
+  saveRecents(recents)
   renderRecents()
 }
 
 function clearRecents() {
-  saveRecents([])
+  const pinnedIds = new Set(getPins().map(p => p.id))
+  const recents = getRecents().filter(r => pinnedIds.has(r.id))
+  saveRecents(recents)
   renderRecents()
 }
 
 function renderRecents() {
-  const recents = getRecents()
-  if (recents.length === 0) {
+  const pins = getPins()
+  const allRecents = getRecents()
+  const recentsById = new Map(allRecents.map(r => [r.id, r]))
+  const unpinnedRecents = allRecents.filter(r => !isPinned(r.id))
+  
+  pins.sort((a, b) => a.pinnedAt - b.pinnedAt)
+  unpinnedRecents.sort((a, b) => b.lastOpenedAt - a.lastOpenedAt)
+  
+  const pinnedDisplay = pins.map(p => {
+    const recent = recentsById.get(p.id)
+    return { ...p, lastOpenedAt: recent?.lastOpenedAt || null }
+  })
+  
+  const displayItems = [...pinnedDisplay, ...unpinnedRecents]
+  
+  if (displayItems.length === 0) {
     recentSection.style.display = 'none'
     return
   }
   
   recentSection.style.display = 'block'
-  recentList.innerHTML = recents.map(r => `
-    <a href="/view/${r.id}" class="recent-item" data-pdf-id="${r.id}">
+  recentList.innerHTML = displayItems.map(item => {
+    const isItemPinned = isPinned(item.id)
+    const pinIcon = isItemPinned 
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V5a1 1 0 0 1 1-1l.784-.784A1 1 0 0 0 17 2.5v0a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v0a1 1 0 0 0 .216.63L8 4a1 1 0 0 1 1 1z"/></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V5a1 1 0 0 1 1-1l.784-.784A1 1 0 0 0 17 2.5v0a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v0a1 1 0 0 0 .216.63L8 4a1 1 0 0 1 1 1z"/></svg>'
+      
+    const timeText = item.lastOpenedAt ? formatTimeAgo(item.lastOpenedAt) : (isItemPinned ? 'Pinned' : '')
+    
+    return `
+    <a href="/view/${item.id}" class="recent-item ${isItemPinned ? 'pinned' : ''}" data-pdf-id="${item.id}">
       <div class="recent-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
       </div>
       <div class="recent-info">
-        <div class="recent-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
-        <div class="recent-meta">${formatTimeAgo(r.lastOpenedAt)}</div>
+        <div class="recent-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <div class="recent-meta">${timeText}</div>
       </div>
+      <button class="recent-pin-btn" data-pin-id="${item.id}" title="${isItemPinned ? 'Unpin' : 'Pin'}">
+        ${pinIcon}
+      </button>
     </a>
-  `).join('')
+  `}).join('')
   
   recentList.querySelectorAll('.recent-item').forEach(el => {
     el.addEventListener('click', (e) => {
+      if (e.target.closest('.recent-pin-btn')) return
+      
       const id = el.dataset.pdfId
       const recents = getRecents()
-      const pdf = recents.find(r => r.id === id)
+      const pdf = recents.find(r => r.id === id) || getPins().find(p => p.id === id)
       if (pdf) addRecent(pdf)
+    })
+  })
+  
+  recentList.querySelectorAll('.recent-pin-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const id = btn.dataset.pinId
+      togglePin(id)
+      renderRecents()
     })
   })
 }
