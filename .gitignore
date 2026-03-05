@@ -1,4 +1,5 @@
 node_modules/
-pdfs/*.pdf
+pdfs/**
 tmp/
 reading-progress.json
+pdf-cache.json
