@@ -1,7 +1,8 @@
 node_modules
 pdfs
 .git
+.github
 *.md
 *.png
-outline-issue.png
-gview-dummy.png
+docker-compose.yml
+docs
