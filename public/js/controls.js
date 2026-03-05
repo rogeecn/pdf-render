@@ -2,6 +2,9 @@ import Panzoom from '/js/vendor/panzoom.es.js'
 
 const SWIPE_MIN_PX = 40
 const SWIPE_MAX_MS = 600
+const DEFAULT_MIN_SCALE = 0.5
+const FIT_MIN_SCALE = 0.1
+const BG_STORAGE_KEY = 'pdfViewer.bgColor'
 
 export class ViewerControls {
   constructor(viewer) {
@@ -16,7 +19,6 @@ export class ViewerControls {
     this.zoomOutBtn = document.getElementById('zoom-out')
     this.fitWidthBtn = document.getElementById('fit-width')
     this.fitPageBtn = document.getElementById('fit-page')
-    this.resetBtn = document.getElementById('reset')
     this.zoomLevel = document.getElementById('zoom-level')
     this.pageIndicator = document.getElementById('page-indicator')
     this.toggleModeBtn = document.getElementById('toggle-mode')
@@ -24,6 +26,9 @@ export class ViewerControls {
     this.outlinePanel = document.getElementById('outline-panel')
     this.outlineTree = document.getElementById('outline-tree')
     this.closeOutlineBtn = document.getElementById('close-outline')
+    this.settingsBtn = document.getElementById('toggle-settings')
+    this.settingsPanel = document.getElementById('settings-panel')
+    this.autoscrollSpeedSection = document.getElementById('autoscroll-speed-section')
 
     this.swipeStartX = 0
     this.swipeStartY = 0
@@ -33,6 +38,8 @@ export class ViewerControls {
     this.autoScrollSpeedPps = 30
     this.autoScrollRafId = null
     this.autoScrollLastTs = null
+    this.settingsPanelOpen = false
+    this.hasOutlineItems = false
   }
 
   getQualityTier(zoom) {
@@ -53,6 +60,9 @@ export class ViewerControls {
     this.bindViewerEvents()
     this.bindAutoScrollEvents()
     this.bindOutlineEvents()
+    this.bindSettingsPanel()
+    this.bindBackgroundPresets()
+    this.restoreBackground()
     this.updateZoomDisplay()
     this.updateAutoScrollButton()
     this.updateAutoScrollSpeedDisplay()
@@ -84,6 +94,30 @@ export class ViewerControls {
     })
   }
 
+  getFitWidthBaseWidth() {
+    if (this.viewer.displayMode === 'horizontal') {
+      const currentPageWrapper = this.container.querySelector(`.page-wrapper[data-page-num="${this.viewer.currentPage}"]`)
+      if (currentPageWrapper) return currentPageWrapper.offsetWidth
+    } else {
+      const visibleWrappers = Array.from(this.container.querySelectorAll('.page-wrapper')).filter(el => {
+        const rect = el.getBoundingClientRect()
+        return rect.bottom > 0 && rect.top < window.innerHeight
+      })
+      if (visibleWrappers.length > 0) return visibleWrappers[0].offsetWidth
+    }
+    
+    const firstWrapper = this.container.querySelector('.page-wrapper')
+    if (firstWrapper) return firstWrapper.offsetWidth
+    
+    return this.container.scrollWidth
+  }
+
+  setPanzoomMinScale(min) {
+    if (this.panzoom) {
+      this.panzoom.setOptions({ minScale: min })
+    }
+  }
+
   bindToolbarEvents() {
     this.zoomInBtn.addEventListener('click', () => {
       this.panzoom.zoomIn()
@@ -97,19 +131,26 @@ export class ViewerControls {
 
     this.fitWidthBtn.addEventListener('click', () => {
       const viewportWidth = this.viewport.clientWidth - 40
-      const containerWidth = this.container.scrollWidth
+      const containerWidth = this.getFitWidthBaseWidth()
       const targetScale = viewportWidth / containerWidth
+      
+      const isBelowMin = targetScale < DEFAULT_MIN_SCALE
+      if (isBelowMin) {
+        this.setPanzoomMinScale(FIT_MIN_SCALE)
+      }
+      
       this.panzoom.zoom(targetScale, { animate: true })
       this.panzoom.pan(0, 0, { animate: true })
       this.onZoomChange()
+      
+      if (isBelowMin) {
+        setTimeout(() => {
+          this.setPanzoomMinScale(DEFAULT_MIN_SCALE)
+        }, 250)
+      }
     })
 
     this.fitPageBtn.addEventListener('click', () => {
-      this.panzoom.reset({ animate: true })
-      this.onZoomChange()
-    })
-
-    this.resetBtn.addEventListener('click', () => {
       this.panzoom.reset({ animate: true })
       this.onZoomChange()
     })
@@ -123,7 +164,7 @@ export class ViewerControls {
     })
   }
 
-bindModeEvents() {
+  bindModeEvents() {
     this.toggleModeBtn.addEventListener('click', () => {
       const newMode = this.viewer.displayMode === 'vertical' ? 'horizontal' : 'vertical'
       
@@ -141,6 +182,11 @@ bindModeEvents() {
 
   bindKeyboardEvents() {
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (this.settingsPanelOpen) this.closeSettingsPanel()
+        return
+      }
+
       if (this.viewer.displayMode !== 'horizontal') return
 
       if (e.key === 'ArrowLeft') {
@@ -203,9 +249,76 @@ bindModeEvents() {
     })
   }
 
+  bindSettingsPanel() {
+    this.settingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.settingsPanelOpen ? this.closeSettingsPanel() : this.openSettingsPanel()
+    })
+
+    document.addEventListener('click', (e) => {
+      if (this.settingsPanelOpen &&
+          !this.settingsPanel.contains(e.target) &&
+          e.target !== this.settingsBtn &&
+          !this.settingsBtn.contains(e.target)) {
+        this.closeSettingsPanel()
+      }
+    })
+  }
+
+  openSettingsPanel() {
+    this.settingsPanelOpen = true
+    this.settingsPanel.classList.add('open')
+    this.settingsPanel.setAttribute('aria-hidden', 'false')
+    this.settingsBtn.setAttribute('aria-pressed', 'true')
+  }
+
+  closeSettingsPanel() {
+    this.settingsPanelOpen = false
+    this.settingsPanel.classList.remove('open')
+    this.settingsPanel.setAttribute('aria-hidden', 'true')
+    this.settingsBtn.setAttribute('aria-pressed', 'false')
+  }
+
+  bindBackgroundPresets() {
+    const presets = this.settingsPanel.querySelectorAll('.bg-preset')
+    presets.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const color = btn.dataset.bg
+        this.setBackground(color)
+        presets.forEach(b => { b.classList.remove('active') })
+        btn.classList.add('active')
+      })
+    })
+  }
+
+  setBackground(color) {
+    document.body.style.background = color
+    try {
+      localStorage.setItem(BG_STORAGE_KEY, color)
+    } catch {}
+  }
+
+  restoreBackground() {
+    try {
+      const saved = localStorage.getItem(BG_STORAGE_KEY)
+      if (saved) {
+        document.body.style.background = saved
+        const presets = this.settingsPanel.querySelectorAll('.bg-preset')
+        presets.forEach(btn => {
+          if (btn.dataset.bg === saved) {
+            btn.classList.add('active')
+          } else {
+            btn.classList.remove('active')
+          }
+        })
+      }
+    } catch {}
+  }
+
   updateModeButton() {
     const isHorizontal = this.viewer.displayMode === 'horizontal'
-    this.toggleModeBtn.textContent = isHorizontal ? 'Scroll' : 'Paged'
+    const label = this.toggleModeBtn.querySelector('span')
+    if (label) label.textContent = isHorizontal ? 'Scroll' : 'Paged'
     this.toggleModeBtn.setAttribute('aria-pressed', isHorizontal.toString())
   }
 
@@ -262,6 +375,7 @@ bindModeEvents() {
     this.autoScrollLastTs = null
     this.autoScrollRafId = requestAnimationFrame((ts) => this.autoScrollTick(ts))
     this.updateAutoScrollButton()
+    this.showAutoScrollSpeed(true)
   }
 
   stopAutoScroll() {
@@ -274,6 +388,7 @@ bindModeEvents() {
     }
     this.autoScrollLastTs = null
     this.updateAutoScrollButton()
+    this.showAutoScrollSpeed(false)
   }
 
   toggleAutoScroll() {
@@ -321,9 +436,16 @@ bindModeEvents() {
     const btn = document.getElementById('toggle-autoscroll')
     if (!btn) return
 
-    btn.textContent = this.isAutoScrolling ? '⏸' : '▶'
+    const label = btn.querySelector('span')
+    if (label) label.textContent = this.isAutoScrolling ? 'Stop' : 'Auto'
     btn.setAttribute('aria-pressed', this.isAutoScrolling.toString())
     btn.disabled = !this.canAutoScroll()
+  }
+
+  showAutoScrollSpeed(visible) {
+    if (this.autoscrollSpeedSection) {
+      this.autoscrollSpeedSection.style.display = visible ? '' : 'none'
+    }
   }
 
   updateAutoScrollSpeedDisplay() {
@@ -333,7 +455,7 @@ bindModeEvents() {
     }
   }
 
-bindAutoScrollEvents() {
+  bindAutoScrollEvents() {
     const toggleBtn = document.getElementById('toggle-autoscroll')
     const speedInput = document.getElementById('autoscroll-speed')
 
@@ -391,7 +513,9 @@ bindAutoScrollEvents() {
     if (items.length > 0) {
       this.toggleOutlineBtn.style.display = ''
       this.renderOutlineTree(items)
+      this.hasOutlineItems = true
     } else {
+      this.hasOutlineItems = false
       this.toggleOutlineBtn.style.display = 'none'
     }
   }

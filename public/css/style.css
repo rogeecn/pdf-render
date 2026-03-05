@@ -15,79 +15,271 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  position: relative;
 }
+
+/* ========== Floating Toolbar ========== */
 
 #toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  color: #fff;
+  z-index: 100;
+  pointer-events: none;
+}
+
+#toolbar-left,
+#toolbar-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: #323639;
-  color: #fff;
-  border-bottom: 1px solid #1a1a1a;
+  gap: 6px;
   flex-shrink: 0;
-  z-index: 10;
+  pointer-events: auto;
 }
 
-#toolbar button {
-  background: #4a4d50;
-  border: 1px solid #5a5d60;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 4px;
+#toolbar-center {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+#page-indicator {
+  display: inline-block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+  background: rgba(30, 30, 30, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 6px 14px;
+  border-radius: 10px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(30, 30, 30, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
-  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-#toolbar button:hover {
-  background: #5a5d60;
+.icon-btn:hover {
+  background: rgba(30, 30, 30, 0.75);
+  color: #fff;
 }
 
-#toolbar button:active {
-  background: #3a3d40;
+.icon-btn:active {
+  background: rgba(30, 30, 30, 0.85);
 }
 
-#toolbar-left, #toolbar-right {
+.icon-btn[aria-pressed="true"] {
+  background: rgba(30, 30, 30, 0.75);
+  color: #fff;
+}
+
+.icon-btn svg {
+  flex-shrink: 0;
+}
+
+/* ========== Settings Panel ========== */
+
+.settings-panel {
+  position: fixed;
+  top: 52px;
+  right: 8px;
+  width: 220px;
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 0;
+  z-index: 99;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.settings-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.settings-section {
+  padding: 8px 12px;
+}
+
+.settings-section + .settings-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.settings-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.settings-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.settings-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#zoom-level {
+  min-width: 40px;
+  text-align: center;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.settings-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.settings-option-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.settings-option-btn:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.settings-option-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.settings-option-btn svg {
+  flex-shrink: 0;
+}
+
 #autoscroll-speed {
-  width: 80px;
+  flex: 1;
   height: 4px;
   cursor: pointer;
-  accent-color: #5a5d60;
+  accent-color: rgba(255, 255, 255, 0.6);
 }
 
 #autoscroll-speed-value {
   font-size: 12px;
-  color: #ccc;
-  min-width: 28px;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-#zoom-level {
-  min-width: 48px;
-  text-align: center;
-  font-size: 13px;
-  color: #ccc;
+/* Background presets */
+
+.settings-bg-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
-#page-indicator {
-  font-size: 13px;
-  color: #ccc;
+.bg-preset {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
+
+.bg-preset:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.bg-preset.active {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.bg-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ========== Viewport ========== */
 
 #viewport {
   flex: 1;
   overflow: auto;
   position: relative;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 #viewport::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
 
 #page-container {
@@ -122,6 +314,7 @@ html, body {
 }
 
 /* Horizontal paged mode */
+
 .mode-horizontal #viewport {
   overflow: hidden;
 }
@@ -138,18 +331,21 @@ html, body {
   display: none;
 }
 
-/* Outline Panel */
+/* ========== Outline Panel ========== */
+
 #outline-panel {
   position: fixed;
   top: 0;
   left: 0;
   width: 280px;
   height: 100%;
-  background: #323639;
-  border-right: 1px solid #1a1a1a;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   transform: translateX(-100%);
   transition: transform 0.2s ease;
-  z-index: 100;
+  z-index: 200;
   display: flex;
   flex-direction: column;
 }
@@ -163,7 +359,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -172,7 +368,7 @@ html, body {
 #close-outline {
   background: transparent;
   border: none;
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 18px;
   cursor: pointer;
   padding: 4px 8px;
@@ -180,7 +376,8 @@ html, body {
 }
 
 #close-outline:hover {
-  background: #4a4d50;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 #outline-tree {
@@ -195,7 +392,7 @@ html, body {
   text-align: left;
   background: transparent;
   border: none;
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.7);
   padding: 8px 16px;
   font-size: 13px;
   cursor: pointer;
@@ -205,13 +402,13 @@ html, body {
 }
 
 .outline-item:hover {
-  background: #4a4d50;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
 .outline-item:focus {
   outline: none;
-  background: #4a4d50;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
@@ -226,29 +423,39 @@ html, body {
 }
 
 #outline-tree::-webkit-scrollbar-track {
-  background: #2a2d30;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 #outline-tree::-webkit-scrollbar-thumb {
-  background: #5a5d60;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 
 #outline-tree::-webkit-scrollbar-thumb:hover {
-  background: #6a6d70;
+  background: rgba(255, 255, 255, 0.3);
 }
 
-#back-btn {
-  background: #4a4d50;
-  border: 1px solid #5a5d60;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  text-decoration: none;
+/* ========== Responsive ========== */
+
+@media (max-width: 768px) {
+  #toolbar {
+    padding: 6px 8px;
+  }
+
+  .settings-panel {
+    right: 4px;
+    width: 200px;
+  }
 }
 
-#back-btn:hover {
-  background: #5a5d60;
+@media (max-width: 480px) {
+  .settings-panel {
+    right: 4px;
+    left: 4px;
+    width: auto;
+  }
+
+  #page-indicator {
+    font-size: 12px;
+  }
 }
