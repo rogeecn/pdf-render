@@ -3,6 +3,7 @@ import { ViewerControls } from './controls.js'
 
 const RECENTS_KEY = 'pdfLibrary.recents.v1'
 const MAX_RECENTS = 10
+const PROGRESS_SAVE_DEBOUNCE_MS = 1000
 
 function getPdfIdFromUrl() {
   const match = window.location.pathname.match(/^\/view\/([a-f0-9]{32})$/)
@@ -45,6 +46,35 @@ function updateRecentPage(pdfId, page) {
   }
 }
 
+function debounce(fn, ms) {
+  let timer
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), ms)
+  }
+}
+
+function saveProgressToServer(pdfId, page) {
+  fetch(`/api/progress/${pdfId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ page })
+  }).catch(err => console.error('Failed to save progress:', err))
+}
+
+const debouncedSaveProgress = debounce(saveProgressToServer, PROGRESS_SAVE_DEBOUNCE_MS)
+
+async function fetchSavedProgress(pdfId) {
+  try {
+    const res = await fetch(`/api/progress/${pdfId}`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.page || null
+  } catch {
+    return null
+  }
+}
+
 async function main() {
   const pdfId = getPdfIdFromUrl()
   
@@ -66,13 +96,30 @@ async function main() {
       name: info.filename || 'Unknown'
     })
 
+    const savedPage = await fetchSavedProgress(pdfId)
+    if (savedPage && savedPage > 1 && savedPage <= info.pageCount) {
+      viewer.navigateToPage(savedPage)
+    }
+
     const container = document.getElementById('page-container')
     container.addEventListener('viewer:pageChange', (e) => {
       updateRecentPage(pdfId, e.detail.page)
+      debouncedSaveProgress(pdfId, e.detail.page)
     })
 
     controls.init()
     controls.updatePageIndicator()
+
+    const viewport = document.getElementById('viewport')
+    let lastTrackedPage = savedPage || 1
+    viewport.addEventListener('scroll', () => {
+      const currentPage = viewer.getCurrentPage()
+      if (currentPage !== lastTrackedPage) {
+        lastTrackedPage = currentPage
+        updateRecentPage(pdfId, currentPage)
+        debouncedSaveProgress(pdfId, currentPage)
+      }
+    }, { passive: true })
   } catch (err) {
     console.error('Failed to initialize PDF viewer:', err)
     document.getElementById('page-indicator').textContent = 'Error loading PDF'

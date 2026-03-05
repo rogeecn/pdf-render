@@ -9,6 +9,7 @@ let searchQuery = ''
 let isSearchMode = false
 let searchResults = []
 let rootLoaded = false
+let progressData = {}
 
 const viewport = document.getElementById('tree-viewport')
 const topSpacer = document.getElementById('top-spacer')
@@ -193,6 +194,8 @@ function renderRecents() {
       : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V5a1 1 0 0 1 1-1l.784-.784A1 1 0 0 0 17 2.5v0a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v0a1 1 0 0 0 .216.63L8 4a1 1 0 0 1 1 1z"/></svg>'
       
     const timeText = item.lastOpenedAt ? formatTimeAgo(item.lastOpenedAt) : (isItemPinned ? 'Pinned' : '')
+    const progress = progressData[item.id]
+    const progressText = progress?.page > 1 ? ` · p.${progress.page}` : ''
     
     return `
     <a href="/view/${item.id}" class="recent-item ${isItemPinned ? 'pinned' : ''}" data-pdf-id="${item.id}">
@@ -201,7 +204,7 @@ function renderRecents() {
       </div>
       <div class="recent-info">
         <div class="recent-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
-        <div class="recent-meta">${timeText}</div>
+        <div class="recent-meta">${timeText}${progressText}</div>
       </div>
       <button class="recent-pin-btn" data-pin-id="${item.id}" title="${isItemPinned ? 'Unpin' : 'Pin'}">
         ${pinIcon}
@@ -229,6 +232,15 @@ function renderRecents() {
       renderRecents()
     })
   })
+}
+
+async function fetchAllProgress() {
+  try {
+    const res = await fetch('/api/progress')
+    if (res.ok) {
+      progressData = await res.json()
+    }
+  } catch {}
 }
 
 async function fetchRoot() {
@@ -488,7 +500,7 @@ function handleSearchInput(e) {
   debounce(performSearch, 200)(query)
 }
 
-function init() {
+async function init() {
   viewport.addEventListener('scroll', handleScroll, { passive: true })
   searchInput.addEventListener('input', handleSearchInput)
   searchClear.addEventListener('click', () => {
@@ -498,6 +510,7 @@ function init() {
   })
   document.getElementById('clear-recents').addEventListener('click', clearRecents)
   
+  await fetchAllProgress()
   renderRecents()
   fetchRoot()
 }
