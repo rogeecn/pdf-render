@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-const CACHE_VERSION = 2
+const CACHE_VERSION = 3
 const CACHE_FILENAME = 'pdf-cache.json'
 
 export function getCachePath() {

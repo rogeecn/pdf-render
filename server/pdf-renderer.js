@@ -2,6 +2,7 @@ import * as fs from 'node:fs'
 import * as mupdf from 'mupdf'
 import { LRUCache } from './cache.js'
 import { getPdfById } from './pdf-index.js'
+import { getMimeType } from './formats.js'
 
 const imageCache = new LRUCache(100)
 const docCache = new Map()
@@ -17,7 +18,8 @@ function getDocument(pdfId) {
   }
 
   const buffer = fs.readFileSync(entry.filePath)
-  const doc = mupdf.Document.openDocument(buffer, 'application/pdf')
+  const magic = getMimeType(entry.filePath)
+  const doc = mupdf.Document.openDocument(buffer, magic)
   docCache.set(pdfId, doc)
   return doc
 }

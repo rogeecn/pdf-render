@@ -3,6 +3,7 @@ import * as path from 'node:path'
 import * as crypto from 'node:crypto'
 import * as mupdf from 'mupdf'
 import { loadCache, saveCacheAtomically, buildCacheData, getCachePath } from './pdf-cache.js'
+import { isSupportedFile, getMimeType } from './formats.js'
 
 const PDF_DIR = process.env.PDF_DIR || path.resolve('pdfs')
 const SCAN_INTERVAL = parseInt(process.env.SCAN_INTERVAL || '1800000', 10)
@@ -55,7 +56,8 @@ function hashRelPath(relPath) {
 
 function extractMetadata(filePath) {
   const buffer = fs.readFileSync(filePath)
-  const doc = mupdf.Document.openDocument(buffer, 'application/pdf')
+  const magic = getMimeType(filePath)
+  const doc = mupdf.Document.openDocument(buffer, magic)
   try {
     const pageCount = doc.countPages()
     const stats = fs.statSync(filePath)
@@ -138,7 +140,7 @@ function updateFolderRelationships() {
 }
 
 export function scanDirectoryRecursive() {
-  console.log(`Scanning PDF directory recursively: ${PDF_DIR}`)
+  console.log(`Scanning document directory recursively: ${PDF_DIR}`)
   
   if (!fs.existsSync(PDF_DIR)) {
     console.warn(`PDF directory does not exist: ${PDF_DIR}, creating...`)
@@ -171,7 +173,7 @@ export function scanDirectoryRecursive() {
       
       if (entry.isDirectory()) {
         stack.push({ absDir: absPath, relDir: relPath })
-      } else if (entry.isFile() && name.toLowerCase().endsWith('.pdf')) {
+      } else if (entry.isFile() && isSupportedFile(name)) {
         const normalizedRelPath = normalizeRelPath(relPath)
         seenRelPaths.add(normalizedRelPath)
         
@@ -231,7 +233,7 @@ export function scanDirectoryRecursive() {
   ensureFolderExists('')
   updateFolderRelationships()
   
-  console.log(`Scan complete: ${byId.size} PDFs indexed (${added} added, ${updated} updated, ${skipped} unchanged, ${removed} removed)`)
+  console.log(`Scan complete: ${byId.size} documents indexed (${added} added, ${updated} updated, ${skipped} unchanged, ${removed} removed)`)
 }
 
 export function getAllPdfs() {
@@ -407,7 +409,7 @@ export function startPeriodicScan() {
       folderIndex.set(folder.path, folder)
     }
     
-    console.log(`Loaded cache: ${byId.size} PDFs, ${folderIndex.size} folders`)
+    console.log(`Loaded cache: ${byId.size} documents, ${folderIndex.size} folders`)
     
     setTimeout(() => {
       try {

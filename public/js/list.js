@@ -425,7 +425,7 @@ function render() {
           </span>
           <div class="row-content">
             <div class="row-name">${escapeHtml(row.data.name)}</div>
-            <div class="row-counts">${row.data.counts?.totalPdfs || 0} PDFs</div>
+            <div class="row-counts">${row.data.counts?.totalPdfs || 0} docs</div>
           </div>
         </div>
       `
@@ -486,7 +486,7 @@ function updatePdfCount() {
   } else {
     const root = folderStore.get('')
     const total = root?.counts?.totalPdfs || 0
-    pdfCount.textContent = `${total} PDF${total !== 1 ? 's' : ''}`
+    pdfCount.textContent = `${total} document${total !== 1 ? 's' : ''}`
   }
 }
 
