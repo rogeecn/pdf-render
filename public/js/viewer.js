@@ -228,10 +228,17 @@ export class EbookViewer {
     this.qualityTier = qualityTier
     this.serverScale = getScaleForQualityTier(qualityTier)
     this.renderedPages.clear()
-    
+
+    const viewportRect = this.viewport.getBoundingClientRect()
+    const margin = 300
     this.container.querySelectorAll('.page-wrapper').forEach((wrapper) => {
-      const pageNum = parseInt(wrapper.dataset.page, 10)
-      this.renderPage(wrapper, pageNum, qualityTier)
+      const rect = wrapper.getBoundingClientRect()
+      const isNearViewport = rect.bottom >= viewportRect.top - margin &&
+                             rect.top <= viewportRect.bottom + margin
+      if (isNearViewport) {
+        const pageNum = parseInt(wrapper.dataset.page, 10)
+        this.renderPage(wrapper, pageNum, qualityTier)
+      }
     })
   }
 
