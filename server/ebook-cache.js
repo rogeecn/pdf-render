@@ -5,7 +5,9 @@ const CACHE_VERSION = 6
 const CACHE_FILENAME = 'ebook-cache.json'
 
 export function getCachePath() {
-  return process.env.EBOOK_CACHE_PATH || path.resolve(CACHE_FILENAME)
+  if (process.env.EBOOK_CACHE_PATH) return process.env.EBOOK_CACHE_PATH
+  const dataDir = process.env.DATA_DIR || path.resolve('data')
+  return path.join(dataDir, CACHE_FILENAME)
 }
 
 export function loadCache(cachePath, ebookDir) {
@@ -40,8 +42,10 @@ export function loadCache(cachePath, ebookDir) {
 
 export function saveCacheAtomically(cachePath, data) {
   const tmpPath = `${cachePath}.tmp`
+  const dir = path.dirname(cachePath)
   
   try {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8')
     fs.renameSync(tmpPath, cachePath)
   } catch (err) {

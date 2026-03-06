@@ -54,22 +54,33 @@ function debounce(fn, ms) {
   }
 }
 
-function saveProgressToServer(ebookId, page) {
+function saveProgressToServer(ebookId, page, settings) {
+  const body = { page }
+  if (settings) body.settings = settings
   fetch(`/api/progress/${ebookId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ page })
+    body: JSON.stringify(body)
   }).catch(err => console.error('Failed to save progress:', err))
 }
 
 const debouncedSaveProgress = debounce(saveProgressToServer, PROGRESS_SAVE_DEBOUNCE_MS)
+
+function getViewerSettings(viewer, controls) {
+  return {
+    displayMode: viewer.displayMode,
+    zoom: controls.currentZoom,
+    bgColor: document.body.style.background || null
+  }
+}
 
 async function fetchSavedProgress(ebookId) {
   try {
     const res = await fetch(`/api/progress/${ebookId}`)
     if (!res.ok) return null
     const data = await res.json()
-    return data.page || null
+    if (!data.page) return null
+    return data
   } catch {
     return null
   }
@@ -99,25 +110,47 @@ async function main() {
     const container = document.getElementById('page-container')
     container.addEventListener('viewer:pageChange', (e) => {
       updateRecentPage(ebookId, e.detail.page)
-      debouncedSaveProgress(ebookId, e.detail.page)
+      debouncedSaveProgress(ebookId, e.detail.page, getViewerSettings(viewer, controls))
     })
 
     controls.init()
     controls.updatePageIndicator()
 
-    const savedPage = await fetchSavedProgress(ebookId)
-    if (savedPage && savedPage > 1 && savedPage <= info.pageCount) {
-      viewer.navigateToPage(savedPage)
+    const savedProgress = await fetchSavedProgress(ebookId)
+    if (savedProgress) {
+      if (savedProgress.page && savedProgress.page > 1 && savedProgress.page <= info.pageCount) {
+        viewer.navigateToPage(savedProgress.page)
+      }
+      if (savedProgress.settings) {
+        const s = savedProgress.settings
+        if (s.displayMode && s.displayMode !== viewer.displayMode) {
+          viewer.setDisplayMode(s.displayMode)
+          controls.updateModeButton()
+          controls.updatePanzoomForMode(s.displayMode)
+          controls.updateAutoScrollButton()
+        }
+        if (typeof s.zoom === 'number' && s.zoom !== 1.0) {
+          controls.panzoom.zoom(s.zoom, { animate: false })
+          controls.onZoomChange()
+        }
+        if (s.bgColor) {
+          controls.setBackground(s.bgColor)
+          const presets = document.querySelectorAll('.bg-preset')
+          presets.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.bg === s.bgColor)
+          })
+        }
+      }
     }
 
     const viewport = document.getElementById('viewport')
-    let lastTrackedPage = savedPage || 1
+    let lastTrackedPage = savedProgress?.page || 1
     viewport.addEventListener('scroll', () => {
       const currentPage = viewer.getCurrentPage()
       if (currentPage !== lastTrackedPage) {
         lastTrackedPage = currentPage
         updateRecentPage(ebookId, currentPage)
-        debouncedSaveProgress(ebookId, currentPage)
+        debouncedSaveProgress(ebookId, currentPage, getViewerSettings(viewer, controls))
       }
     }, { passive: true })
   } catch (err) {

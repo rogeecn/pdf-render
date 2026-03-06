@@ -5,8 +5,10 @@ services:
       - "3000:3000"
     volumes:
       - ./ebooks:/app/ebooks:ro
+      - ./data:/app/data
     environment:
       - PORT=3000
       - EBOOK_DIR=/app/ebooks
+      - DATA_DIR=/app/data
       - SCAN_INTERVAL=1800000
     restart: unless-stopped

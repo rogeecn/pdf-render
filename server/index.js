@@ -172,22 +172,30 @@ app.get('/api/progress/:id', (req, res) => {
   if (!progress) {
     return res.json({ page: null })
   }
-  res.json({ page: progress.page, updatedAt: progress.updatedAt })
+  res.json({ page: progress.page, updatedAt: progress.updatedAt, settings: progress.settings || null })
 })
 
 app.put('/api/progress/:id', (req, res) => {
   const { id } = req.params
-  const { page } = req.body
+  const { page, settings } = req.body
 
   if (typeof page !== 'number' || page < 1 || !Number.isInteger(page)) {
     return res.status(400).json({ error: 'Invalid page number' })
   }
 
+  const validSettings = settings && typeof settings === 'object'
+    ? {
+        displayMode: typeof settings.displayMode === 'string' ? settings.displayMode : undefined,
+        zoom: typeof settings.zoom === 'number' ? settings.zoom : undefined,
+        bgColor: typeof settings.bgColor === 'string' ? settings.bgColor : undefined,
+      }
+    : undefined
+
   const ebook = getEbookById(id)
   const relPath = ebook?.relPath || ''
   const filePath = ebook?.filePath || ''
 
-  setProgress(id, page, relPath, filePath)
+  setProgress(id, page, relPath, filePath, validSettings)
   res.json({ ok: true })
 })
 

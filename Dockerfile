@@ -18,13 +18,14 @@ COPY package.json ./
 COPY server ./server
 COPY public ./public
 
-RUN mkdir -p /app/ebooks && chown -R node:node /app
+RUN mkdir -p /app/ebooks /app/data && chown -R node:node /app
 
 USER node
 
 EXPOSE 3000
 
-VOLUME /app/ebooks
+ENV DATA_DIR=/app/data
+VOLUME ["/app/ebooks", "/app/data"]
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server/index.js"]
