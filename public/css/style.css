@@ -44,23 +44,17 @@ html, body {
   pointer-events: auto;
 }
 
-#toolbar-center {
-  flex: 1;
-  text-align: center;
-  min-width: 0;
-  pointer-events: auto;
-}
-
 #page-indicator {
   display: inline-block;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.7);
   font-variant-numeric: tabular-nums;
-  background: rgba(30, 30, 30, 0.55);
+  background: rgba(30, 30, 30, 0.35);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 6px 14px;
   border-radius: 10px;
+  opacity: 0.75;
 }
 
 .icon-btn {
@@ -69,30 +63,34 @@ html, body {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(30, 30, 30, 0.55);
+  background: rgba(30, 30, 30, 0.35);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: none;
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
+  opacity: 0.75;
 }
 
 .icon-btn:hover {
-  background: rgba(30, 30, 30, 0.75);
+  background: rgba(30, 30, 30, 0.55);
   color: #fff;
+  opacity: 1;
 }
 
 .icon-btn:active {
-  background: rgba(30, 30, 30, 0.85);
+  background: rgba(30, 30, 30, 0.7);
+  opacity: 1;
 }
 
 .icon-btn[aria-pressed="true"] {
-  background: rgba(30, 30, 30, 0.75);
+  background: rgba(30, 30, 30, 0.55);
   color: #fff;
+  opacity: 1;
 }
 
 .icon-btn svg {
