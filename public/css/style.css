@@ -477,6 +477,9 @@ html, body {
   line-height: 1.8;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text;
 }
 
 .page-content h1 { font-size: 1.8em; margin: 0.8em 0 0.4em; }

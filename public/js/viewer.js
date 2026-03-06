@@ -100,7 +100,7 @@ export class EbookViewer {
       wrapper.classList.add('text-format')
 
       const contentDiv = document.createElement('div')
-      contentDiv.className = 'page-content'
+      contentDiv.className = 'page-content panzoom-exclude'
       wrapper.appendChild(contentDiv)
     } else {
       const aspectRatio = pageInfo.height / pageInfo.width
