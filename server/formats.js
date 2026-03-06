@@ -1,7 +1,7 @@
 /** @type {Set<string>} */
 const SUPPORTED_EXTENSIONS = new Set([
   '.pdf', '.epub', '.xps', '.oxps', '.cbz', '.fb2',
-  '.mobi', '.cbt', '.html', '.xhtml', '.md'
+  '.mobi', '.cbt', '.html', '.xhtml', '.md', '.txt'
 ])
 
 export { SUPPORTED_EXTENSIONS }
