@@ -167,3 +167,57 @@ export function preprocessBuffer(buffer, ext) {
   // No preprocessing needed
   return { buffer, magic: lowerExt }
 }
+
+const TXT_LINES_PER_PAGE = 200
+
+/**
+ * Check if a file extension is a direct-render text format (bypasses MuPDF)
+ * @param {string} ext - File extension
+ * @returns {boolean}
+ */
+export function isDirectRenderFormat(ext) {
+  return ['.html', '.xhtml', '.md', '.txt'].includes(ext.toLowerCase())
+}
+
+/**
+ * Convert raw file buffer to an array of sanitized HTML page strings for direct browser rendering.
+ * - TXT: split by lines into chunks, wrap in <pre>
+ * - MD: convert to HTML via markdown-it, return as single page
+ * - HTML/XHTML: sanitize, return as single page
+ * @param {Buffer} buffer - Raw file content
+ * @param {string} ext - File extension (e.g. '.txt', '.md', '.html')
+ * @returns {{ pages: string[], totalLines?: number }}
+ */
+export function bufferToHtmlPages(buffer, ext) {
+  const lowerExt = ext.toLowerCase()
+
+  if (lowerExt === '.txt') {
+    const text = buffer.toString('utf-8')
+    const lines = text.split(/\r?\n/)
+    const pages = []
+
+    for (let i = 0; i < lines.length; i += TXT_LINES_PER_PAGE) {
+      const chunk = lines.slice(i, i + TXT_LINES_PER_PAGE)
+      const escaped = chunk
+        .map(l => l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+        .join('\n')
+      pages.push(`<pre class="txt-content">${escaped}</pre>`)
+    }
+
+    if (pages.length === 0) {
+      pages.push('<pre class="txt-content"></pre>')
+    }
+
+    return { pages, totalLines: lines.length }
+  }
+
+  if (lowerExt === '.md') {
+    const markdown = buffer.toString('utf-8')
+    const html = markdownToHtml(markdown)
+    return { pages: [html] }
+  }
+
+  const raw = buffer.toString('utf-8')
+  const sanitized = sanitizeEbookHtml(raw)
+  return { pages: [sanitized] }
+}
